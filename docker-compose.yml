@@ -1,0 +1,230 @@
+services:
+  # Base de datos PostgreSQL
+  postgres:
+    image: postgres:13
+    container_name: smaf-postgres
+    environment:
+      POSTGRES_DB: smaf_db
+      POSTGRES_USER: smaf_user
+      POSTGRES_PASSWORD: smaf_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smaf_user -d smaf_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis para cache y sesiones
+  redis:
+    image: redis:6
+    container_name: smaf-redis
+    command: redis-server --appendonly yes --requirepass smaf_redis_password
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Microservicio de ML
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: smaf-ml-service
+    environment:
+      - PORT=5000
+      - DEBUG=false
+      - LOG_LEVEL=INFO
+    ports:
+      - "5000:5000"
+    volumes:
+      - ml_models:/app/models
+      - ml_logs:/app/logs
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Backend API (NestJS)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: smaf-backend
+    environment:
+      # Database
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=smaf_user
+      - DB_PASSWORD=smaf_password
+      - DB_DATABASE=smaf_db
+      
+      # JWT
+      - JWT_SECRET=your_super_secret_jwt_key_change_in_production
+      - JWT_EXPIRATION=24h
+      
+      # App
+      - PORT=3000
+      - NODE_ENV=production
+      
+      # ML Service
+      - ML_SERVICE_URL=http://ml-service:5000
+      
+      # Redis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=smaf_redis_password
+      
+      # Security
+      - ENCRYPTION_KEY=your_32_character_encryption_key_here
+      - MFA_SECRET=your_mfa_secret_change_in_production
+      
+      # Rate Limiting
+      - THROTTLE_TTL=60
+      - THROTTLE_LIMIT=100
+    ports:
+      - "3000:3000"
+    volumes:
+      - backend_logs:/app/logs
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
+
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smaf-frontend
+    environment:
+      - REACT_APP_API_URL=http://localhost:3000/api/v1
+      - REACT_APP_ENVIRONMENT=production
+    ports:
+      - "3001:3000"
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - backend
+
+  # Nginx (Reverse Proxy)
+  nginx:
+    image: nginx:alpine
+    container_name: smaf-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx_logs:/var/log/nginx
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    depends_on:
+      - backend
+      - frontend
+
+  # Prometheus (Métricas)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: smaf-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - smaf-network
+    restart: unless-stopped
+
+  # Grafana (Dashboards)
+  grafana:
+    image: grafana/grafana:latest
+    container_name: smaf-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    ports:
+      - "3002:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    networks:
+      - smaf-network
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  ml_models:
+    driver: local
+  ml_logs:
+    driver: local
+  backend_logs:
+    driver: local
+  nginx_logs:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  smaf-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+
