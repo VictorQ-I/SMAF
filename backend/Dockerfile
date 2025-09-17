@@ -10,14 +10,14 @@ WORKDIR /app
 # Copiar archivos de dependencias
 COPY package*.json ./
 
-# Instalar dependencias
-RUN npm ci --omit=dev && npm cache clean --force
+# Instalar dependencias (incluye dev para poder compilar)
+RUN npm ci && npm cache clean --force
 
 # Copiar código fuente
 COPY . .
 
 # Construir aplicación
-RUN npm run build
+RUN npm run build && npm prune --omit=dev && npm cache clean --force
 
 # Crear usuario no-root
 RUN addgroup -g 1001 -S nodejs

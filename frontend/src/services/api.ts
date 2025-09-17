@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
-import { ApiResponse } from '@/types';
+import { ApiResponse } from '../types';
 import toast from 'react-hot-toast';
 
 class ApiService {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Transaction, TransactionFilters, TransactionStatus } from '@/types';
-import { transactionService } from '@/services/transactionService';
+import { Transaction, TransactionFilters, TransactionStatus } from '../types';
+import { transactionService } from '../services/transactionService';
 import { 
   FunnelIcon, 
   ArrowDownTrayIcon, 

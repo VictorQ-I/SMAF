@@ -1,21 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from '@/context/AuthContext';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { Layout } from '@/components/layout/Layout';
+import { AuthProvider } from './context/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { Layout } from './components/layout/Layout';
 
 // Pages
-import { LoginPage } from '@/pages/LoginPage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { TransactionsPage } from '@/pages/TransactionsPage';
-import { AnalyticsPage } from '@/pages/AnalyticsPage';
-import { RulesPage } from '@/pages/RulesPage';
-import { ReportsPage } from '@/pages/ReportsPage';
-import { AuditPage } from '@/pages/AuditPage';
-import { UsersPage } from '@/pages/UsersPage';
-import { ProfilePage } from '@/pages/ProfilePage';
-import { NotFoundPage } from '@/pages/NotFoundPage';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/DashboardPage';
+import { TransactionsPage } from './pages/TransactionsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
+import { RulesPage } from './pages/RulesPage';
+import { ReportsPage } from './pages/ReportsPage';
+import { AuditPage } from './pages/AuditPage';
+import { UsersPage } from './pages/UsersPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // Estilos
 import './index.css';

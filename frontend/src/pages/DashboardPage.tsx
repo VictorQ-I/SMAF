@@ -6,8 +6,8 @@ import {
   ClockIcon,
   EyeIcon
 } from '@heroicons/react/24/outline';
-import { transactionService } from '@/services/transactionService';
-import { DashboardStats, Transaction } from '@/types';
+import { transactionService } from '../services/transactionService';
+import { DashboardStats, Transaction } from '../types';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export const DashboardPage: React.FC = () => {

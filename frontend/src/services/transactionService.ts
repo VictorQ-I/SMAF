@@ -5,7 +5,7 @@ import {
   PaginatedResponse, 
   DashboardStats,
   TransactionStatus 
-} from '@/types';
+} from '../types';
 
 export class TransactionService {
   // Obtener lista de transacciones con filtros y paginación

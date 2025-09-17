@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, LoginForm, AuthContextType } from '@/types';
-import { authService } from '@/services/authService';
+import { User, LoginForm, AuthContextType } from '../types';
+import { authService } from '../services/authService';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

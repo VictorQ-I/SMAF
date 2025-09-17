@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '@/context/AuthContext';
-import { LoginForm } from '@/types';
+import { useAuth } from '../context/AuthContext';
+import { LoginForm } from '../types';
 import { EyeIcon, EyeSlashIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -139,7 +139,7 @@ export const LoginPage: React.FC = () => {
                   className="font-medium text-primary-600 hover:text-primary-500"
                   onClick={(e) => {
                     e.preventDefault();
-                    toast.info('Contacta al administrador para restablecer tu contraseña');
+                    toast('Contacta al administrador para restablecer tu contraseña');
                   }}
                 >
                   ¿Olvidaste tu contraseña?
